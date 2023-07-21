@@ -24,7 +24,9 @@ For this project, we use multiple Julia packages. The code has been updated and 
 * SCIP v0.11.10 (https://github.com/scipopt/SCIP.jl): make sure to instal SCIP beforehand.
 
 ## Data
-This package contains many data related to pricing problems related to parking choice. In the Data.jl file, we store all the used data in the paper and in this section we discuss how to use them. All the codes return the following outputs:
+This package contains many data related to pricing problems related to parking choice. We have stored the generated data used for our numerical experiments in the folder #random-beta. Also, you can find the instaces generated to run the algorithm by Li et al. (2019) in the folder #Intel-instance. 
+
+In the Data.jl file, we store all the used data in the paper and in this section we discuss how to use them. All the codes return the following outputs:
 * Beta_parameter: a matrix whose rows are related to the parking choices (FSP, PSP, and PUP) and columns are related to customer classes. This matrix represents $`\beta^p_{in}`$.
 * q_parameter: a matrix whose rows are related to the parking choices (FSP, PSP, and PUP) and columns are related to customer classes. This matrix represents $`q_{in}`$.
 * NUM_POINTS: This is the diemension of the problem. 
