@@ -1,5 +1,5 @@
 # Static_Pricing_problem
-Codes related to the paper: A. Marandi, V Lurkin (2020), Static Pricing Problems under Mixed Multinomial Logit Demand (https://arxiv.org/abs/2005.07482).
+Codes related to the paper: A. Marandi, V Lurkin (2023), An exact algorithm for the static pricing problem under discrete mixed logit demand (https://arxiv.org/abs/2005.07482).
 
 In case of using these codes, you are obliged to properly cite the paper.  
 
