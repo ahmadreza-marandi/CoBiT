@@ -15,6 +15,7 @@ For this project, we use multiple Julia packages. The code has been updated and 
 * LinearAlgebra (https://github.com/JuliaLang/julia/tree/master/stdlib/LinearAlgebra)
 * JuMP v1.6.0 (https://jump.dev/)
 * Gurobi v0.11.5 ([https://github.com/jump-dev/Gurobi.jl]): make sure to properly install Gurobi beforehand
+* MosekTools 0.13.2 ([https://github.com/jump-dev/MosekTools.jl]): make sure to instal Mosek beforehand
 * MAT v0.10.3 (https://github.com/JuliaIO/MAT.jl): used to import and export some parameters
 * CPUTime v1.0.0 (https://github.com/schmrlng/CPUTime.jl)
 * JLD2 v0.4.29 (https://github.com/JuliaIO/JLD2.jl): used for some importing and exporting
@@ -23,6 +24,7 @@ For this project, we use multiple Julia packages. The code has been updated and 
 * NLopt v0.6.5 (https://github.com/JuliaOpt/NLopt.jl)
 * SCIP v0.11.10 (https://github.com/scipopt/SCIP.jl): make sure to instal SCIP beforehand.
 
+To make use of these packages, use ```using <name of the package> ```.
 ## Data
 This package contains many data related to pricing problems related to parking choice. We have stored the generated data used for our numerical experiments in the folder #random-beta. Also, you can find the instaces generated to run the algorithm by Li et al. (2019) in the folder #Intel-instance, and the ones for van de Geer and den Boer (2022) in the folder GB. 
 
