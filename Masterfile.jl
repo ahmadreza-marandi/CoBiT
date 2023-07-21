@@ -8,7 +8,7 @@
 # using ForwardDiff
 using LinearAlgebra
 using JuMP
-# using Gurobi
+using Gurobi
 using HiGHS
 # using CPLEX
 using MAT
@@ -155,11 +155,11 @@ function homogenious_MNL(time_limit,hatp_1)
 	end
 	return hatp_1,discrete_Mixed_logit_function(hatp_1[:,1])
 end
-function SCIP_degenerate()
+function SCIP_degenerate(data)
 	model = Model(SCIP.Optimizer)
 	set_optimizer_attribute(model, "limits/time", 600)
 	# set_optimizer_attribute(model,"println/verblevel",5)
-	Beta_parameter,q_parameter,NUM_POINTS,N,UB_p,LB_p=Logit_10();
+	Beta_parameter,q_parameter,NUM_POINTS,N,UB_p,LB_p=data();
 	@variable(model,p[1:NUM_POINTS])
 	@constraint(model, p .>= LB_p)
 	@constraint(model, p .<= UB_p)
@@ -999,20 +999,7 @@ function τ_upperbound_conic(C,d,A,b,LB_p,UB_p,P_size,P_0,i_n,i_p,r,time_limit, 
 	# end 
 end
 
-function f_upperbound_Selvi(C,d,A,b,LB_p,UB_p,P_size,P_0,obj_fun_i,i_n,i_p,time_limit, p_init)
-	######### INCOMPLETE##################
-	q = size(A,1);
-	m =Model(Ipopt.Optimizer)
-	set_optimizer_attribute(m, "print_level",0)
-	@variable(m, obj)
-	@variable(m, u[1:q])
-	@variable(m, r[1:q])
-	@variable(m, V[1:q,1:NUM_POINTS])
-	@objective(m, Min, obj)
 
-	@NLconstraint(m, -b'*u + (1-b'*r)*sum( exp(Beta_parameter[j,i_n]*p[j]+q_parameter[j,i_n] - (Beta_parameter[i_p,i_n]*p[i_p]+q_parameter[i_p,i_n])) for j=1:NUM_POINTS) <=1)
-
-end
 
 function τ_upperbound(C,d,A,b,LB_p,UB_p,P_size,P_0,obj_fun_i,i,time_limit, p_init)
 	### for only the denominator using our trust_Region
@@ -1172,41 +1159,7 @@ function τ_lowerbound(C,d,A,b,P_size,P_0,obj_fun_i,i,time_limit)
 	return value(τ) , round.(value.(p)[:],digits= rounding_decimals*2)
 end
 
-function f_upperbound(LB_p, UB_p,P_size,obj_fun_i,i,time_limit)
-	function upper_help(x)
-       return obj_fun_i(x,i)
-    end
-    tolerr=Tolerr;
-	# opt = Opt(:GN_DIRECT_L, P_size);
-	# opt.lower_bounds = LB_p;
-	# opt.upper_bounds = UB_p;
-	# opt.ftol_rel=tolerr;
-	# opt.xtol_rel=tolerr;
-	# opt.maxtime= time_limit;
-	# opt.max_objective = upper_help;
-	# t=@timed (minf,p,ret) = NLopt.optimize(opt, rand(P_size).*(UB_p-LB_p) + LB_p)
-	# bestf=obj_fun_i(p,i);
-    ###Optim
-	# function g!(G, x)
-	# 	G=FiniteDiff.finite_difference_gradient(-obj_fun_i(x,i), x)
-	# end
-	# inner_optimizer = GradientDescent()
-	# results = Optim.optimize(f, g!, LB_p, UB_p, (UB_p+LB_p)/2, Fminbox(inner_optimizer))
-	# bestf=-results.minimum;
 
-	####enumeration
-	bestf=obj_fun_i(LB_p,i);
-	p=LB_p;
-	for i_p=1:P_size
-		index_size_i=collect(with_replacement_combinations(collect(1:P_size), i_p))
-		for j_ind=1:size(index_size_i,1)
-			p=LB_p;
-			p[index_size_i[j_ind]]=UB_p[index_size_i[j_ind]] 
-			bestf=max(obj_fun_i(p,i),bestf)
-		end
-	end
-	return bestf
-end
 function solve_nlopt(time_limit)
 	#solving the problem using NLopt
 	P_size=size(Beta_parameter,1);
@@ -1219,46 +1172,7 @@ function solve_nlopt(time_limit)
 	return t
 end
 
-function local_solver_IPOPT(A,b,time_limit)
-	NUM_POINTS=size(A,2);
-	model = Model(SCIP.Optimizer)
-	# set_optimizer_attribute(model, "max_cpu_time", time_limit)
-	# set_optimizer_attribute(model, "print_level", 0)
-	# set_optimizer_attribute(model, "mip_solver", CPLEX.Optimizer)
-	# set_optimizer_attribute(model, " warm_start_init_point", "yes")
-	@variable(model, p[1:NUM_POINTS]>=0)
-	@constraint(model, A*p .>= b)
-	@variable(model, obj)
-	@objective(model, Max, obj)
-	@NLconstraint(model, obj <=sum( p[i]*( exp(Beta_parameter[i,n]*p[i]+q_parameter[i,n])/(sum(exp(Beta_parameter[j,n]*p[j]+q_parameter[j,n]) for j=1:NUM_POINTS)))  for n=1:N, i=2:NUM_POINTS))
-	sol=JuMP.optimize!(model)
-	if termination_status(model) != MOI.INFEASIBLE
-		return value(obj),value.(p);
-	else
-		return "infeasible"
-	end
-end
-function local_solver_IPOPT_MNL_i(A,b,time_limit,i)
-	NUM_POINTS=size(A,2);
-	model = Model(Ipopt.Optimizer)
-	set_optimizer_attribute(model, "max_cpu_time", time_limit)
-	set_optimizer_attribute(model, "print_level", 3)
-	# set_optimizer_attribute(model, "mip_solver", CPLEX.Optimizer)
-	# set_optimizer_attribute(model, " warm_start_init_point", "yes")
-	@variable(model, p[1:NUM_POINTS]>=0)
-	@constraint(model, A*p .>= b)
-	@variable(model, obj)
-	@objective(model, Max, obj)
-	for i_p=1:NUM_POINTS
-		for i_n=1:N
-			if i == (i_p-1)*N+i_n
-				@NLconstraint(model, obj <=(sum(exp((Beta_parameter[j,i_n]*p[j]+q_parameter[j,i_n])-(Beta_parameter[i_p,i_n]*p[i_p]+q_parameter[i_p,i_n])) for j=1:NUM_POINTS)  ))
-			end
-		end
-	end
-	sol=JuMP.optimize!(model)
-	return value(obj),value.(p);
-end
+
 function local_solver_NLopt(A,b,time_limit,tolerr,obj_fun,p_init)
 	function myconstraint(x::Vector, grad::Vector, a, b)
 	    if length(grad) > 0
