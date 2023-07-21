@@ -60,10 +60,12 @@ This package contains many functions. In this section we discuss each functions,
    * Discrete: uses the fucntions ``` Mixed_logit_function_discreteDis ``` and ``` Mixed_logit_function_i_discreteDis ```.
  We emphasize that in definition of the objective function we have $ \sum_{k}\frac{C_k*p+d^k}{f_{k}(p)} $ (see problem (7) in the paper).
 ## Examples
-*parking case with N=10:
-``` loc ="C:/Users" #the link to the folder where the output is saved
+* parking case with N=10:
+```
+loc ="C:/Users" #the link to the folder where the output is saved
 Beta_parameter,q_parameter,NUM_POINTS,N,UB_p,LB_p=Logit_10();  #defining the parameters
-R=1;
+R=1; #no probability
+##making the C matrix and the d vector
 C=zeros(Sum_size,NUM_POINTS);
 d=zeros(Sum_size);
 for i_p=1:NUM_POINTS
@@ -73,6 +75,54 @@ for i_p=1:NUM_POINTS
 end
 sol= solve_local_opt_Btree("MNL",7200,loc)
 ```
+* parking case with N=50:
+```
+loc ="C:/Users" #the link to the folder where the output is saved
+Beta_parameter,q_parameter,NUM_POINTS,N,UB_p,LB_p=Logit_50();
+Sum_size=NUM_POINTS*N;
+C=zeros(Sum_size,NUM_POINTS);
+d=zeros(Sum_size);
+for i_p=1:NUM_POINTS
+	for i_n=1:N
+			C[(i_p-1)*N+i_n,i_p]=1;
+	end
+end
+sol= @timed solve_local_opt_Btree("MNL",7200,loc)
+```
+* soling one of the instances of Intel case
+```
+instance =1 # the index of the instance
 
+data_inst=JLD2.jldopen("C:/Users/20176914/surfdrive/scientific/University/Codes/Julia/NonlinearProgramming_Virginie/Intel instance/rand_instance_$instance.jld2", "r")
+Beta_parameter_old=data_inst["Beta_parameter"];
+
+q_parameter=data_inst["q_parameter"];
+NUM_POINTS=data_inst["NUM_POINTS"];
+N=data_inst["N"];
+R=data_inst["R"];
+UB_p_old=data_inst["UB_p"];
+LB_p=data_inst["LB_p"];
+w_k_old=data_inst["w_k"];
+Beta_parameter=copy(Beta_parameter_old);
+UB_p=copy(UB_p_old);
+w_k=copy(w_k_old);
+Sum_size=NUM_POINTS*N*R;
+C=zeros(Sum_size,NUM_POINTS);
+d=zeros(Sum_size);
+close(data_inst)
+for i_p=1:NUM_POINTS
+	for i_n=1:N
+		for r=1:R
+			C[(i_p-1)*N*R+(i_n-1)*R+r,i_p]=w_k_old[r]*UB_p_old[i_p];
+			w_k[r]=w_k_old[r]*UB_p_old[i_p];
+			Beta_parameter[i_p,i_n,r]=Beta_parameter_old[i_p,i_n,r]*UB_p_old[i_p];
+		end		
+	end
+	if UB_p_old[i_p] != 0 
+		UB_p[i_p]=1;
+	end
+end
+sol= @timed solve_local_opt_Btree("Discrete",7200,loc)
+```
 
 
