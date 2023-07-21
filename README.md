@@ -24,7 +24,7 @@ For this project, we use multiple Julia packages. The code has been updated and 
 * SCIP v0.11.10 (https://github.com/scipopt/SCIP.jl): make sure to instal SCIP beforehand.
 
 ## Data
-This package contains many data related to pricing problems related to parking choice. We have stored the generated data used for our numerical experiments in the folder #random-beta. Also, you can find the instaces generated to run the algorithm by Li et al. (2019) in the folder #Intel-instance. 
+This package contains many data related to pricing problems related to parking choice. We have stored the generated data used for our numerical experiments in the folder #random-beta. Also, you can find the instaces generated to run the algorithm by Li et al. (2019) in the folder #Intel-instance, and the ones for van de Geer and den Boer (2022) in the folder GB. 
 
 In the Data.jl file, we store all the used data in the paper and in this section we discuss how to use them. All the codes return the following outputs:
 * Beta_parameter: a matrix whose rows are related to the parking choices (FSP, PSP, and PUP) and columns are related to customer classes. This matrix represents $`\beta^p_{in}`$.
@@ -89,7 +89,7 @@ for i_p=1:NUM_POINTS
 end
 sol= @timed solve_local_opt_Btree("MNL",7200,loc)
 ```
-* soling one of the instances of Intel case
+* solving one of the instances of Intel case
 ```
 instance =1 # the index of the instance
 
@@ -124,5 +124,43 @@ for i_p=1:NUM_POINTS
 end
 sol= @timed solve_local_opt_Btree("Discrete",7200,loc)
 ```
+* solving one of the instances of van de Geer and den Boer (2022)
+```
+using BSON #to read the file
+r=0
+n_=10
+m_=1
+d_=BSON.load("GB\\" * string(n_) * string(m_) * string(r)*".bson")  #this should be the folder where the instances are stored
+global NUM_POINTS = d_[:n] + 1; #we need to incorporate the no price option
+global N= d_[:m];
+lb = copy(d_[:p_lb])
+global LB_p = pushfirst!(lb ,0);
+ub = copy(d_[:p_ub])
+global UB_p = pushfirst!(ub ,0);
 
+global Beta_parameter=zeros(NUM_POINTS,N)
+beta = copy(d_[:b])
+pushfirst!( beta ,0);
+for n=1:N
+Beta_parameter[:,n] = -  beta
+end
+
+global q_parameter=zeros(NUM_POINTS,N);
+for n=1:N
+q = copy(d_[:a][n])
+q_parameter[:,n] = pushfirst!(q ,0)
+end
+global w = d_[:w]
+
+global Sum_size=NUM_POINTS*N;
+global C=zeros(Sum_size,NUM_POINTS);
+global d=zeros(Sum_size);
+for i_p=1:NUM_POINTS
+for i_n=1:N
+	C[(i_p-1)*N+i_n,i_p] = w[i_n];
+end
+end
+loc ="C:/Users/20176914/surfdrive/scientific/University/Codes/Julia/NonlinearProgramming_Virginie/MS_pricing paper/CoBIT"
+sol= @timed solve_local_opt_Btree("MNL",7200,loc)
+```
 
