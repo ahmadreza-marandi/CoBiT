@@ -5,9 +5,9 @@ In case of using these codes, you are obliged to properly cite the paper.
 
 ## Table of contents
 * [Technologies](#technologies)
-* [Data](#Data)
-* [Functions and their features](#Functions-and-their-features)
-* [Examples](#Examples)
+* [Data](#data)
+* [Functions and their features](#functions-and-their-features)
+* [Examples](#examples)
 
 ## Technologies
 For this project, we use multiple Julia packages. The code has been updated and tested on Julia 1.8.0. The packages and the tested versions are listed below:
